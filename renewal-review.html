@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Renewal Review — Account Manager Agent</title>
+<style>
+  body {
+    font-family: -apple-system, Segoe UI, sans-serif;
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1a1a2e;
+  }
+  h1 { font-size: 20px; }
+  h2 { font-size: 15px; margin-top: 24px; margin-bottom: 8px; color: #1E2D6E; }
+  label { display: block; margin-top: 12px; font-weight: 600; font-size: 12.5px; }
+  input, textarea, select {
+    width: 100%; padding: 8px 10px; margin-top: 4px;
+    border: 1px solid #ccc; border-radius: 6px; font-size: 13.5px;
+    box-sizing: border-box; font-family: inherit;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  button {
+    margin-top: 16px; padding: 10px 20px; background: #2F3283; color: white;
+    border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { background: #999; cursor: not-allowed; }
+  .status { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; font-family: monospace; display: none; }
+  .status.show { display: block; }
+  .status.error { background: #fbe7e7; }
+  .status.success { background: #E4FAE8; }
+  .row { display: flex; gap: 20px; }
+  .row > div { flex: 1; }
+  .hint { font-size: 11.5px; color: #666; margin-top: 3px; }
+  #resultSection { display: none; margin-top: 24px; }
+  hr { margin: 24px 0; border: none; border-top: 1px solid #eee; }
+
+.premium-box {
+display: flex; gap: 16px; margin: 14px 0; padding: 14px 16px; border-radius: 8px; background: #F6F7FA;
+}
+.premium-item { flex: 1; text-align: center; }
+.premium-item .lbl { font-size: 11px; color: #666; }
+.premium-item .val { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.change-up { color: #D64545; }
+.change-down { color: #229C3B; }
+
+.risk-badge {
+display: inline-block; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; margin-top: 6px;
+}
+.risk-low { background: #E4FAE8; color: #1F9C37; }
+.risk-medium { background: #FBF0DE; color: #D98E2B; }
+.risk-high { background: #FBE7E7; color: #D64545; }
+.risk-unknown { background: #EEEFF3; color: #666; }
+
+.flags { background: #FBF0DE; border: 1px solid #D98E2B; border-radius: 8px; padding: 12px 16px; margin-top: 12px; }
+.flags li { margin-bottom: 6px; font-size: 13px; }
+</style>
+
+</head>
+<body>
+
+<h1>Renewal Review — Account Manager Agent</h1>
+<p>Upload the new renewal proposal. If you have the prior term's dec page too, upload that as well for a direct term-over-term comparison. Nothing is written to NowCerts from this page — this is review-only.</p>
+
+<label>Review Function URL</label>
+<input id="functionUrl" value="https://xkspweszwovzoxfqfcyc.supabase.co/functions/v1/review-renewal" placeholder="https://YOUR_PROJECT.supabase.co/functions/v1/review-renewal">
+
+<label>Dashboard Key</label>
+<input id="dashKey" type="password" placeholder="Your DASHBOARD_KEY secret">
+
+<div class="row">
+  <div>
+    <label>New Renewal Proposal (required)</label>
+    <input type="file" id="newProposalFile" accept="application/pdf">
+  </div>
+  <div>
+    <label>Prior Term Dec Page (optional)</label>
+    <input type="file" id="priorDecFile" accept="application/pdf">
+    <div class="hint">Skip this for a standalone review of the new proposal only</div>
+  </div>
+</div>
+
+<button id="reviewBtn" onclick="runReview()">Review Renewal</button>
+
+<div id="reviewStatus" class="status"></div>
+
+<div id="resultSection">
+  <hr>
+  <h2 id="insuredName"></h2>
+
+  <div id="premiumSection"></div>
+
+  <div id="riskSection"></div>
+
+  <div class="flags" id="flagsBox" style="display:none;">
+    <strong id="flagsHeader">Material changes / concerns:</strong>
+    <ul id="flagsList"></ul>
+  </div>
+
+<label>Summary (edit before copying into NowCerts)</label>
+
+  <textarea id="summaryText"></textarea>
+
+<button class="secondary" onclick="copySummary()" style="background:#4B7A6B;">Copy Summary to Clipboard</button>
+
+</div>
+
+<script>
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function fmtMoney(n) {
+  if (n == null) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+async function runReview() {
+  const url = document.getElementById('functionUrl').value.trim();
+  const key = document.getElementById('dashKey').value.trim();
+  const newFile = document.getElementById('newProposalFile').files[0];
+  const priorFile = document.getElementById('priorDecFile').files[0];
+  const statusEl = document.getElementById('reviewStatus');
+  const btn = document.getElementById('reviewBtn');
+
+  if (!url || !key || !newFile) {
+    alert('Fill in the Function URL, Dashboard Key, and upload at least the new renewal proposal.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Reviewing... (calls Claude, may take 10-20s)';
+  statusEl.className = 'status show';
+  statusEl.textContent = 'Reading documents and comparing...';
+  document.getElementById('resultSection').style.display = 'none';
+
+  try {
+    const newProposalBase64 = await fileToBase64(newFile);
+    const priorDecPageBase64 = priorFile ? await fileToBase64(priorFile) : null;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-dashboard-key': key },
+      body: JSON.stringify({ newProposalBase64, priorDecPageBase64 })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusEl.className = 'status show error';
+      statusEl.textContent = `Error (${res.status}): ${JSON.stringify(data, null, 2)}`;
+      return;
+    }
+
+    statusEl.className = 'status show success';
+    statusEl.textContent = 'Review complete.';
+
+    const c = data.comparison;
+    document.getElementById('insuredName').textContent = c.insured?.commercialName || 'Renewal Review';
+
+    // Premium section
+    const premiumEl = document.getElementById('premiumSection');
+    if (data.hadPriorTerm && c.premiumChange) {
+      const dir = c.premiumChange.direction;
+      const cls = dir === 'increase' ? 'change-up' : dir === 'decrease' ? 'change-down' : '';
+      const arrow = dir === 'increase' ? '▲' : dir === 'decrease' ? '▼' : '—';
+      premiumEl.innerHTML = `
+        <div class="premium-box">
+          <div class="premium-item"><div class="lbl">Prior Term</div><div class="val">${fmtMoney(c.priorTerm.totalPremium)}</div></div>
+          <div class="premium-item"><div class="lbl">New Term</div><div class="val">${fmtMoney(c.newTerm.totalPremium)}</div></div>
+          <div class="premium-item"><div class="lbl">Change</div><div class="val ${cls}">${arrow} ${Math.abs(c.premiumChange.percentChange).toFixed(1)}%</div></div>
+        </div>
+      `;
+    } else {
+      premiumEl.innerHTML = `
+        <div class="premium-box">
+          <div class="premium-item"><div class="lbl">New Term Premium</div><div class="val">${fmtMoney(c.newTerm.totalPremium)}</div></div>
+          <div class="premium-item"><div class="lbl">Comparison</div><div class="val" style="font-size:13px;color:#666;">No prior term uploaded</div></div>
+        </div>
+      `;
+    }
+
+    // Risk section
+    const riskClass = 'risk-' + (c.retentionRisk || 'unknown');
+    document.getElementById('riskSection').innerHTML =
+      `<strong>Retention risk:</strong> <span class="risk-badge ${riskClass}">${(c.retentionRisk || 'unknown').toUpperCase()}</span>`;
+
+    // Flags
+    const flagsBox = document.getElementById('flagsBox');
+    const flagsList = document.getElementById('flagsList');
+    const flagsHeader = document.getElementById('flagsHeader');
+    if (c.materialChanges && c.materialChanges.length > 0) {
+      flagsHeader.textContent = data.hadPriorTerm ? 'Material changes term-over-term:' : 'Coverage concerns:';
+      flagsList.innerHTML = c.materialChanges.map(f => `<li>${f}</li>`).join('');
+      flagsBox.style.display = 'block';
+    } else {
+      flagsBox.style.display = 'none';
+    }
+
+    document.getElementById('summaryText').value = c.summaryNote || '';
+    document.getElementById('resultSection').style.display = 'block';
+  } catch (err) {
+    statusEl.className = 'status show error';
+    statusEl.textContent = `Network error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Review Renewal';
+  }
+}
+
+function copySummary() {
+  const text = document.getElementById('summaryText').value;
+  navigator.clipboard.writeText(text).then(() => alert('Copied — paste into the NowCerts note field.'));
+}
+</script>
+
+</body>
+</html>
