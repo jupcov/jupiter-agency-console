@@ -6,8 +6,8 @@
 <title>Jupiter Coverage — Agency Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
 <style>
   :root {
     --navy: #3B3FCF;
@@ -989,9 +989,32 @@
     document.querySelector('.lob-center-label .big').textContent =
       total >= 1000 ? `$${(total / 1000).toFixed(0)}K` : `$${total}`;
 
-    if (lobChartInstance) lobChartInstance.destroy();
+    if (lobChartInstance) {
+      try { lobChartInstance.destroy(); } catch (e) { /* ignore */ }
+      lobChartInstance = null;
+    }
 
     const lobCtx = document.getElementById('lobChart');
+    if (typeof Chart === 'undefined' || !lobCtx) {
+      // Chart.js missing — still render legend; don't break live load
+      const legendEl = document.getElementById('lobLegend');
+      if (legendEl) {
+        legendEl.innerHTML = lines.map(d => {
+          const pct = total ? ((d.premium / total) * 100).toFixed(0) : '0';
+          return `
+        <div class="lob-legend-item">
+          <div class="lob-swatch" style="background:${d.color};"></div>
+          <div class="lob-legend-text">
+            <span class="lob-legend-name">${d.name}</span>
+            <span class="lob-legend-detail">$${(d.premium / 1000).toFixed(1)}K</span>
+          </div>
+          <div class="lob-legend-pct">${pct}%</div>
+        </div>
+      `;
+        }).join('');
+      }
+      return;
+    }
     lobChartInstance = new Chart(lobCtx, {
       type: 'doughnut',
       data: {
@@ -1142,7 +1165,7 @@
         if ((btn.textContent || '').trim().toUpperCase() === 'YTD') lobPeriod = 'ytd';
       }
     });
-    renderLob(lobPeriod);
+    try { renderLob(lobPeriod); } catch (e) { console.warn('renderLob failed', e); }
   }
 
   async function loadLiveData() {
