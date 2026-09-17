@@ -478,7 +478,7 @@
   <div class="nav-scroll">
     <div class="nav-label">WORKSPACE</div>
     <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
-    <div class="nav-item active" data-view="renewals" onclick="switchView('renewals', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Renewals<span class="nav-badge">14</span></div>
+    <div class="nav-item active" data-view="renewals" onclick="switchView('renewals', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Renewals<span class="nav-badge" id="nav-renewals-badge">—</span></div>
     <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Clients</div>
     <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Policies</div>
     <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Billing<span class="nav-badge">3</span></div>
@@ -659,7 +659,7 @@
 
     <div class="page-head">
       <h2>Upcoming renewals</h2>
-      <span class="meta">14 open &middot; synced from NowCerts 4 min ago</span>
+      <span class="meta" id="upcoming-renewals-meta">Loading renewals…</span>
     </div>
 
     <div class="filter-row">
@@ -685,59 +685,7 @@
           <th></th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td><div class="client-name">Franksters Gangsters LLC</div><div class="client-sub">Jupiter, FL &middot; Restaurant/LRO</div></td>
-          <td><span class="lob-tag">BOP</span></td>
-          <td>Utica First / Morstan</td>
-          <td>Oct 3, 2026</td>
-          <td class="days-left critical">17 days</td>
-          <td>$8,240</td>
-          <td><span class="status-pill status-urgent"><span class="dot"></span>Quoting</span></td>
-          <td><div class="row-actions">
-            <div class="icon-btn" title="Compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
-            <div class="icon-btn" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></div>
-          </div></td>
-        </tr>
-        <tr>
-          <td><div class="client-name">Sweet Hollow Diner</div><div class="client-sub">Melville, NY &middot; Restaurant</div></td>
-          <td><span class="lob-tag">WC</span></td>
-          <td>AmTrust</td>
-          <td>Oct 9, 2026</td>
-          <td class="days-left critical">23 days</td>
-          <td>$14,120</td>
-          <td><span class="status-pill status-quoted"><span class="dot"></span>Quoted</span></td>
-          <td><div class="row-actions">
-            <div class="icon-btn" title="Compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
-            <div class="icon-btn" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></div>
-          </div></td>
-        </tr>
-        <tr>
-          <td><div class="client-name">AH Ponds / Aquatic Habitats</div><div class="client-sub">Westhampton, NY &middot; Pond Contractor</div></td>
-          <td><span class="lob-tag">GL</span></td>
-          <td>CRC Group</td>
-          <td>Oct 22, 2026</td>
-          <td class="days-left soon">36 days</td>
-          <td>$6,975</td>
-          <td><span class="status-pill status-quoting"><span class="dot"></span>Quoting</span></td>
-          <td><div class="row-actions">
-            <div class="icon-btn" title="Compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
-            <div class="icon-btn" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></div>
-          </div></td>
-        </tr>
-        <tr>
-          <td><div class="client-name">Vine &amp; Olive LLC</div><div class="client-sub">Titusville, FL &middot; Restaurant</div></td>
-          <td><span class="lob-tag">GL</span></td>
-          <td>Hull &amp; Company</td>
-          <td>Nov 4, 2026</td>
-          <td class="days-left">49 days</td>
-          <td>$5,310</td>
-          <td><span class="status-pill status-bound"><span class="dot"></span>Bound</span></td>
-          <td><div class="row-actions">
-            <div class="icon-btn" title="Compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
-            <div class="icon-btn" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></div>
-          </div></td>
-        </tr>
+      <tbody id="upcoming-renewals-tbody">
       </tbody>
     </table>
 
@@ -1183,9 +1131,153 @@
     return a.label + '&ndash;' + b.label + ', ' + b.y;
   }
 
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function shortLobName(lob) {
+    const raw = String(lob || '').trim();
+    if (!raw) return '—';
+    const lower = raw.toLowerCase();
+    const map = [
+      [/workers?\s*comp/, 'WC'],
+      [/general\s*liab/, 'GL'],
+      [/\bbop\b|business\s*owners/, 'BOP'],
+      [/commercial\s*auto|business\s*auto/, 'Auto'],
+      [/homeowners?/, 'HO'],
+      [/umbrella|excess/, 'Umbrella'],
+      [/epli|employment\s*practices/, 'EPLI'],
+      [/cyber/, 'Cyber'],
+      [/property/, 'Prop'],
+      [/professional|eo\b|errors/, 'E&O'],
+    ];
+    for (const [re, tag] of map) {
+      if (re.test(lower)) return tag;
+    }
+    if (raw.length <= 8) return raw;
+    const words = raw.split(/\s+/).filter(Boolean);
+    if (words.length >= 2) {
+      return words.map(w => w[0]).join('').slice(0, 4).toUpperCase();
+    }
+    return raw.slice(0, 8);
+  }
+
+  function formatRenewalDate(iso) {
+    if (!iso) return '—';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return escapeHtml(iso);
+    return months[Number(m[2]) - 1] + ' ' + Number(m[3]) + ', ' + m[1];
+  }
+
+  function renewalStatusPill(status) {
+    const s = String(status || '').trim();
+    const lower = s.toLowerCase();
+    let cls = 'status-quoting';
+    let label = s || 'Open';
+    if (/active|in[\s-]?force|bound|issued/.test(lower)) {
+      cls = 'status-bound';
+    } else if (/cancel|expired|lapsed/.test(lower)) {
+      cls = 'status-urgent';
+    } else if (/quot/.test(lower)) {
+      // Do not invent quote/bind — only style if API already says quote*
+      cls = /quoted/.test(lower) ? 'status-quoted' : 'status-quoting';
+    }
+    return '<span class="status-pill ' + cls + '"><span class="dot"></span>' +
+      escapeHtml(label) + '</span>';
+  }
+
+  function daysLeftClass(days) {
+    const n = Number(days);
+    if (!Number.isFinite(n)) return 'days-left';
+    if (n < 15) return 'days-left critical';
+    if (n < 30) return 'days-left soon';
+    return 'days-left';
+  }
+
+  function relativeSyncedLabel(generatedAt) {
+    if (!generatedAt) return 'synced just now';
+    const t = new Date(generatedAt).getTime();
+    if (Number.isNaN(t)) return 'synced just now';
+    const mins = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (mins < 1) return 'synced just now';
+    if (mins === 1) return 'synced 1 min ago';
+    if (mins < 60) return 'synced ' + mins + ' min ago';
+    const hrs = Math.round(mins / 60);
+    if (hrs === 1) return 'synced 1 hr ago';
+    return 'synced ' + hrs + ' hr ago';
+  }
+
+  function renderUpcomingRenewals(data) {
+    const block = data?.upcomingRenewals || data?.mtd?.upcomingRenewals;
+    const tbody = document.getElementById('upcoming-renewals-tbody');
+    const meta = document.getElementById('upcoming-renewals-meta');
+    const badge = document.getElementById('nav-renewals-badge');
+    if (!tbody) return;
+    if (!block || !Array.isArray(block.policies)) {
+      if (meta && meta.textContent === 'Loading renewals…') {
+        meta.textContent = 'Awaiting live renewals';
+      }
+      return;
+    }
+
+    const policies = block.policies;
+    const count = typeof block.count === 'number' ? block.count : policies.length;
+    const when = relativeSyncedLabel(data?.generatedAt);
+
+    if (meta) {
+      meta.textContent = count + ' open · ' + when;
+    }
+    if (badge) {
+      badge.textContent = String(count);
+    }
+
+    const compareSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>';
+    const emailSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>';
+
+    if (!policies.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--slate);padding:18px 12px;">No policies expiring in the next ' +
+        (block.windowDays || 60) + ' days.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = policies.map(p => {
+      const loc = [p.city, p.state].filter(Boolean).join(', ');
+      const subParts = [];
+      if (loc) subParts.push(loc);
+      if (p.businessType) subParts.push(p.businessType);
+      const sub = subParts.join(' · ') || (p.policyNumber ? ('Pol #' + p.policyNumber) : '');
+      const days = Number(p.daysLeft);
+      const daysLabel = Number.isFinite(days)
+        ? (days + ' day' + (days === 1 ? '' : 's'))
+        : '—';
+      return '<tr>' +
+        '<td><div class="client-name">' + escapeHtml(p.name || 'Unknown') + '</div>' +
+          (sub ? '<div class="client-sub">' + escapeHtml(sub) + '</div>' : '') +
+        '</td>' +
+        '<td><span class="lob-tag">' + escapeHtml(shortLobName(p.lob)) + '</span></td>' +
+        '<td>' + escapeHtml(p.carrier || '—') + '</td>' +
+        '<td>' + formatRenewalDate(p.expirationDate) + '</td>' +
+        '<td class="' + daysLeftClass(days) + '">' + escapeHtml(daysLabel) + '</td>' +
+        '<td>' + formatPremium(p.premium) + '</td>' +
+        '<td>' + renewalStatusPill(p.status) + '</td>' +
+        '<td><div class="row-actions">' +
+          '<div class="icon-btn" title="Compare">' + compareSvg + '</div>' +
+          '<div class="icon-btn" title="Email">' + emailSvg + '</div>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  }
+
   function applyLivePayload(data) {
     const mtd = data?.mtd;
     const ytd = data?.ytd;
+
+    try { renderUpcomingRenewals(data); } catch (e) { console.warn('renderUpcomingRenewals', e); }
 
     if (mtd) {
       const nb = mtd.summary?.new_business || { premium: 0, count: 0 };
