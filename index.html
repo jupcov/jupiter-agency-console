@@ -1,13 +1,12 @@
 <!-- jcc-ams-v9-live: Claude key banner + Chief month-range YTD -->
 <!DOCTYPE html>
-<!-- build:v3-chart-local -->
+<!-- build:v4-css-donut -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Jupiter Coverage — Agency Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="vendor/chart.umd.min.js?v=3"></script>
 <script src="vendor/jspdf.umd.min.js?v=3"></script>
 <style>
   :root {
@@ -979,84 +978,67 @@
     }
   };
 
-  let lobChartInstance = null;
+  let lobChartInstance = null; // unused — kept so old callers don't break
 
   function renderLob(period) {
     const data = lobDataByPeriod[period];
-    const lines = data.lines.map((d, i) => ({ ...d, color: lobColors[i] }));
-    const total = lines.reduce((s, d) => s + d.premium, 0);
+    const lines = (data.lines || []).map((d, i) => ({ ...d, color: lobColors[i % lobColors.length] }));
+    const total = lines.reduce((s, d) => s + (Number(d.premium) || 0), 0) || 1;
 
-    document.getElementById('lob-range').innerHTML = `By written premium &middot; ${data.range}`;
-    document.querySelector('.lob-center-label .big').textContent =
-      total >= 1000 ? `$${(total / 1000).toFixed(0)}K` : `$${total}`;
-
-    if (lobChartInstance) {
-      try { lobChartInstance.destroy(); } catch (e) { /* ignore */ }
-      lobChartInstance = null;
+    const rangeEl = document.getElementById('lob-range');
+    if (rangeEl) rangeEl.innerHTML = `By written premium &middot; ${data.range}`;
+    const big = document.querySelector('.lob-center-label .big');
+    if (big) {
+      big.textContent = total >= 1000 ? `$${(total / 1000).toFixed(0)}K` : `$${Math.round(total)}`;
     }
 
-    const lobCtx = document.getElementById('lobChart');
-    if (typeof Chart === 'undefined' || !lobCtx) {
-      // Chart.js missing — still render legend; don't break live load
-      const legendEl = document.getElementById('lobLegend');
-      if (legendEl) {
-        legendEl.innerHTML = lines.map(d => {
-          const pct = total ? ((d.premium / total) * 100).toFixed(0) : '0';
-          return `
-        <div class="lob-legend-item">
-          <div class="lob-swatch" style="background:${d.color};"></div>
-          <div class="lob-legend-text">
-            <span class="lob-legend-name">${d.name}</span>
-            <span class="lob-legend-detail">$${(d.premium / 1000).toFixed(1)}K</span>
-          </div>
-          <div class="lob-legend-pct">${pct}%</div>
-        </div>
-      `;
-        }).join('');
+    // Pure CSS donut — no Chart.js (CDN/vendor failures were blocking live status)
+    const wrap = document.querySelector('.lob-chart-wrap');
+    if (wrap) {
+      let ring = document.getElementById('lobCssRing');
+      if (!ring) {
+        // hide canvas if present
+        const canvas = document.getElementById('lobChart');
+        if (canvas) canvas.style.display = 'none';
+        ring = document.createElement('div');
+        ring.id = 'lobCssRing';
+        ring.setAttribute('aria-hidden', 'true');
+        ring.style.cssText = 'width:190px;height:190px;border-radius:50%;margin:0 auto;';
+        wrap.insertBefore(ring, wrap.firstChild);
       }
-      return;
+      let acc = 0;
+      const stops = [];
+      for (const d of lines) {
+        const pct = ((Number(d.premium) || 0) / total) * 100;
+        const a = acc;
+        const b = acc + pct;
+        stops.push(d.color + ' ' + a.toFixed(2) + '% ' + b.toFixed(2) + '%');
+        acc = b;
+      }
+      if (!stops.length) stops.push('#E9EAEF 0% 100%');
+      ring.style.background = 'conic-gradient(' + stops.join(',') + ')';
+      // punch hole
+      ring.style.mask = 'radial-gradient(circle, transparent 68%, #000 69%)';
+      ring.style.webkitMask = 'radial-gradient(circle, transparent 68%, #000 69%)';
     }
-    lobChartInstance = new Chart(lobCtx, {
-      type: 'doughnut',
-      data: {
-        labels: lines.map(d => d.name),
-        datasets: [{
-          data: lines.map(d => d.premium),
-          backgroundColor: lines.map(d => d.color),
-          borderColor: '#FFFFFF',
-          borderWidth: 2,
-        }]
-      },
-      options: {
-        cutout: '68%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const pct = ((ctx.raw / total) * 100).toFixed(1);
-                return ` ${ctx.label}: $${ctx.raw.toLocaleString()} (${pct}%)`;
-              }
-            }
-          }
-        }
-      }
-    });
 
     const legendEl = document.getElementById('lobLegend');
-    legendEl.innerHTML = lines.map(d => {
-      const pct = ((d.premium / total) * 100).toFixed(0);
-      return `
+    if (legendEl) {
+      legendEl.innerHTML = lines.map(d => {
+        const prem = Number(d.premium) || 0;
+        const pct = ((prem / total) * 100).toFixed(0);
+        return `
         <div class="lob-legend-item">
           <div class="lob-swatch" style="background:${d.color};"></div>
           <div class="lob-legend-text">
             <span class="lob-legend-name">${d.name}</span>
-            <span class="lob-legend-detail">$${(d.premium / 1000).toFixed(1)}K</span>
+            <span class="lob-legend-detail">$${(prem / 1000).toFixed(1)}K</span>
           </div>
           <div class="lob-legend-pct">${pct}%</div>
         </div>
       `;
-    }).join('');
+      }).join('');
+    }
   }
 
   function setLobPeriod(period, btn) {
@@ -1354,14 +1336,8 @@
       console.error('loadLiveData failed', err);
       const msg = (err && err.message) ? err.message : String(err);
       if (statusEl) {
-        // Chart/CDN issues should not look like a bad dashboard key
-        if (/Chart is not defined/i.test(msg)) {
-          statusEl.textContent = 'Live data loaded (chart library delayed — refresh if ring is blank)';
-          statusEl.style.color = 'var(--amber)';
-        } else {
-          statusEl.textContent = 'Live data unavailable: ' + msg;
-          statusEl.style.color = 'var(--amber)';
-        }
+        statusEl.textContent = 'Live data unavailable: ' + msg;
+        statusEl.style.color = 'var(--amber)';
       }
       try { renderLob('mtd'); } catch (e2) { console.warn(e2); }
     }
