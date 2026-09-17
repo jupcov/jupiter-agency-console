@@ -555,24 +555,19 @@
               <div class="delta up" id="nb-delta">&#9650; 18% vs prior period</div>
             </div>
             <div class="prod-metric">
-              <div class="val" id="nb-count">6</div>
+              <div class="val" id="nb-count">—</div>
               <div class="lbl">New policies bound</div>
             </div>
           </div>
           <div class="prod-foot">
-            <span class="meta" style="font-size:11.5px;color:var(--slate);">6 accounts &middot; avg $6.9K premium</span>
+            <span class="meta" id="nb-foot-meta" style="font-size:11.5px;color:var(--slate);">—</span>
             <button class="drilldown-link" id="nb-toggle" onclick="toggleDD('nb')">
               View drill-down
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
             </button>
           </div>
           <div class="drilldown-panel" id="nb-panel">
-            <div class="dd-row"><div><div class="dd-name">Sour Seed Bagels <span class="dd-tag">New</span></div><div class="dd-sub">Slawson Hospitality &middot; BOP</div></div><div class="dd-amt">$9,400</div></div>
-            <div class="dd-row"><div><div class="dd-name">Livingston Builders <span class="dd-tag">New</span></div><div class="dd-sub">Palm Beach GC &middot; GL</div></div><div class="dd-amt">$8,150</div></div>
-            <div class="dd-row"><div><div class="dd-name">Clematis Realty <span class="dd-tag">New</span></div><div class="dd-sub">Center City Pharmacy &middot; Property</div></div><div class="dd-amt">$7,600</div></div>
-            <div class="dd-row"><div><div class="dd-name">CETI / Sills Road <span class="dd-tag">New</span></div><div class="dd-sub">Electrical Sub &middot; GL</div></div><div class="dd-amt">$6,900</div></div>
-            <div class="dd-row"><div><div class="dd-name">Cozy Laundry <span class="dd-tag">New</span></div><div class="dd-sub">Laundromat &middot; WC</div></div><div class="dd-amt">$5,300</div></div>
-            <div class="dd-row"><div><div class="dd-name">LaundryBee <span class="dd-tag">New</span></div><div class="dd-sub">Sunshine Suds &middot; WC</div></div><div class="dd-amt">$3,850</div></div>
+            <div class="dd-row" style="justify-content:center;"><div class="dd-sub">No policies loaded yet</div></div>
           </div>
         </div>
 
@@ -592,24 +587,19 @@
               <div class="delta warn" id="rw-delta">&#9660; 4% vs prior period</div>
             </div>
             <div class="prod-metric">
-              <div class="val" id="rw-count">92%</div>
-              <div class="lbl">Retention rate</div>
+              <div class="val" id="rw-count">—</div>
+              <div class="lbl">Renewal policies</div>
             </div>
           </div>
           <div class="prod-foot">
-            <span class="meta" style="font-size:11.5px;color:var(--slate);">5 renewed &middot; 1 lost to market</span>
+            <span class="meta" id="rw-foot-meta" style="font-size:11.5px;color:var(--slate);">—</span>
             <button class="drilldown-link" id="rw-toggle" onclick="toggleDD('rw')">
               View drill-down
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
             </button>
           </div>
           <div class="drilldown-panel" id="rw-panel">
-            <div class="dd-row"><div><div class="dd-name">Vine &amp; Olive LLC <span class="dd-tag re">Renewed</span></div><div class="dd-sub">Titusville FL &middot; GL/Property</div></div><div class="dd-amt">$5,310</div></div>
-            <div class="dd-row"><div><div class="dd-name">Two Guys &amp; A CM Corp <span class="dd-tag re">Renewed</span></div><div class="dd-sub">Holbrook NY &middot; GL</div></div><div class="dd-amt">$11,860</div></div>
-            <div class="dd-row"><div><div class="dd-name">5101 Grill <span class="dd-tag re">Renewed</span></div><div class="dd-sub">Boca Raton &middot; BOP</div></div><div class="dd-amt">$6,200</div></div>
-            <div class="dd-row"><div><div class="dd-name">Ionian Star / Lighthouse Diner <span class="dd-tag re">Renewed</span></div><div class="dd-sub">Wantagh NY &middot; BOP</div></div><div class="dd-amt">$5,280</div></div>
-            <div class="dd-row"><div><div class="dd-name">Refresh Laundry <span class="dd-tag re">Renewed</span></div><div class="dd-sub">Laundromat &middot; WC</div></div><div class="dd-amt">$0 &mdash; deferred</div></div>
-            <div class="dd-row"><div><div class="dd-name">Atlantis Diner <span class="dd-tag" style="background:#FBE7E7;color:var(--red);">Lost</span></div><div class="dd-sub">Went to market carrier direct</div></div><div class="dd-amt">&mdash;</div></div>
+            <div class="dd-row" style="justify-content:center;"><div class="dd-sub">No policies loaded yet</div></div>
           </div>
         </div>
 
@@ -926,6 +916,131 @@
     }
   };
 
+  const POLICY_DISPLAY_CAP = 100;
+  const emptyPolicyBucket = () => ({
+    new_business: [],
+    renewal_rewrite: [],
+    truncated: false,
+    total: { new_business: 0, renewal_rewrite: 0 }
+  });
+  const policyDataByPeriod = {
+    mtd: emptyPolicyBucket(),
+    ytd: emptyPolicyBucket()
+  };
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function policyDedupeKey(row) {
+    return [row.policyNumber || '', row.name || '', row.effectiveDate || '', row.premium ?? ''].join('|');
+  }
+
+  function mergePolicyRows(lists) {
+    const seen = new Set();
+    const out = [];
+    for (const list of lists) {
+      for (const row of (list || [])) {
+        const k = policyDedupeKey(row);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(row);
+      }
+    }
+    out.sort((a, b) => (Number(b.premium) || 0) - (Number(a.premium) || 0));
+    return out;
+  }
+
+  function storePeriodPolicies(period, periodResult) {
+    if (!periodResult) return;
+    const pols = periodResult.policies || {};
+    const nb = Array.isArray(pols.new_business) ? pols.new_business.slice() : [];
+    const rw = Array.isArray(pols.renewal_rewrite) ? pols.renewal_rewrite.slice() : [];
+    nb.sort((a, b) => (Number(b.premium) || 0) - (Number(a.premium) || 0));
+    rw.sort((a, b) => (Number(b.premium) || 0) - (Number(a.premium) || 0));
+    const total = periodResult.policiesTotal || {
+      new_business: nb.length,
+      renewal_rewrite: rw.length
+    };
+    const truncated = !!periodResult.policiesTruncated ||
+      nb.length > POLICY_DISPLAY_CAP ||
+      rw.length > POLICY_DISPLAY_CAP;
+    policyDataByPeriod[period] = {
+      new_business: nb.slice(0, POLICY_DISPLAY_CAP),
+      renewal_rewrite: rw.slice(0, POLICY_DISPLAY_CAP),
+      truncated,
+      total: {
+        new_business: Number(total.new_business) || nb.length,
+        renewal_rewrite: Number(total.renewal_rewrite) || rw.length
+      }
+    };
+  }
+
+  function getActiveProdPeriod(key) {
+    const premiumEl = document.getElementById(key + '-premium');
+    if (!premiumEl) return 'mtd';
+    let root = premiumEl.parentElement;
+    for (let i = 0; i < 8 && root; i++) {
+      const active = root.querySelector('.toggle-btn.active');
+      if (active) {
+        return active.textContent.trim().toLowerCase() === 'ytd' ? 'ytd' : 'mtd';
+      }
+      root = root.parentElement;
+    }
+    return 'mtd';
+  }
+
+  function renderPolicyPanel(key) {
+    const period = getActiveProdPeriod(key);
+    const bucket = policyDataByPeriod[period] || emptyPolicyBucket();
+    const isNb = key === 'nb';
+    const rows = isNb ? bucket.new_business : bucket.renewal_rewrite;
+    const totalCount = isNb ? bucket.total.new_business : bucket.total.renewal_rewrite;
+    const panel = document.getElementById(key + '-panel');
+    const foot = document.getElementById(key + '-foot-meta');
+    if (!panel) return;
+
+    if (!rows || rows.length === 0) {
+      panel.innerHTML = '<div class="dd-row" style="justify-content:center;"><div class="dd-sub">No policies in this period</div></div>';
+    } else {
+      const tagClass = isNb ? 'dd-tag' : 'dd-tag re';
+      const tagLabel = isNb ? 'New' : 'Renewed';
+      let html = rows.map(row => {
+        const name = escapeHtml(row.name || 'Unknown');
+        const carrier = escapeHtml(row.carrier || '—');
+        const lob = escapeHtml(row.lob || '—');
+        const amt = formatPremium(row.premium);
+        return '<div class="dd-row"><div><div class="dd-name">' + name +
+          ' <span class="' + tagClass + '">' + tagLabel + '</span></div>' +
+          '<div class="dd-sub">' + carrier + ' &middot; ' + lob + '</div></div>' +
+          '<div class="dd-amt">' + amt + '</div></div>';
+      }).join('');
+      if (bucket.truncated && totalCount > rows.length) {
+        html += '<div class="dd-row" style="justify-content:center;"><div class="dd-sub">Showing top ' +
+          rows.length + ' of ' + totalCount + ' by premium</div></div>';
+      }
+      panel.innerHTML = html;
+    }
+
+    if (foot) {
+      const shown = rows ? rows.length : 0;
+      if (bucket.truncated && totalCount > shown) {
+        foot.textContent = totalCount + ' policies · showing top ' + shown;
+      } else {
+        foot.textContent = (totalCount || shown) + ' polic' + ((totalCount || shown) === 1 ? 'y' : 'ies');
+      }
+    }
+  }
+
+  function renderAllPolicyPanels() {
+    renderPolicyPanel('nb');
+    renderPolicyPanel('rw');
+  }
+
   function setPeriod(key, period, btn) {
     const group = btn.parentElement;
     group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
@@ -936,6 +1051,7 @@
     const deltaEl = document.getElementById(key + '-delta');
     deltaEl.innerHTML = d.delta;
     deltaEl.className = 'delta ' + d.deltaClass;
+    renderPolicyPanel(key);
   }
 
   function toggleDD(key) {
@@ -1087,6 +1203,7 @@
         range: mtd.start && mtd.end ? formatRangeNice(mtd.start, mtd.end) : lobDataByPeriod.mtd.range,
         lines: (mtd.lobBreakdown || []).map(r => ({ name: r.name, premium: Number(r.premium) || 0 }))
       };
+      storePeriodPolicies('mtd', mtd);
     }
 
     if (ytd) {
@@ -1110,7 +1227,10 @@
         range: ytd.start && ytd.end ? formatRangeNice(ytd.start, ytd.end) : lobDataByPeriod.ytd.range,
         lines: (ytd.lobBreakdown || []).map(r => ({ name: r.name, premium: Number(r.premium) || 0 }))
       };
+      storePeriodPolicies('ytd', ytd);
     }
+
+    renderAllPolicyPanels();
   }
 
   function refreshVisibleCards() {
@@ -1148,6 +1268,7 @@
       }
     });
     try { renderLob(lobPeriod); } catch (e) { console.warn('renderLob failed', e); }
+    try { renderAllPolicyPanels(); } catch (e) { console.warn('renderAllPolicyPanels failed', e); }
   }
 
   async function loadLiveData() {
@@ -1201,6 +1322,8 @@
       let totalPolicies = 0;
       let start = null;
       let end = null;
+      const nbLists = [];
+      const rwLists = [];
       for (const p of parts) {
         if (!p) continue;
         if (!start || p.start < start) start = p.start;
@@ -1218,6 +1341,9 @@
           lobMap[name].premium += Number(row.premium) || 0;
           lobMap[name].count += Number(row.count) || 0;
         }
+        const pols = p.policies || {};
+        nbLists.push(pols.new_business || []);
+        rwLists.push(pols.renewal_rewrite || []);
       }
       for (const key of Object.keys(summary)) {
         summary[key].premium = Math.round(summary[key].premium * 100) / 100;
@@ -1231,13 +1357,29 @@
           pct: lobTotal > 0 ? (v.premium / lobTotal) * 100 : 0
         }))
         .sort((a, b) => b.premium - a.premium);
+
+      const nbMerged = mergePolicyRows(nbLists);
+      const rwMerged = mergePolicyRows(rwLists);
+      const policiesTotal = {
+        new_business: nbMerged.length,
+        renewal_rewrite: rwMerged.length
+      };
+      const policiesTruncated =
+        nbMerged.length > POLICY_DISPLAY_CAP ||
+        rwMerged.length > POLICY_DISPLAY_CAP;
       return {
         start: start || '',
         end: end || '',
         totalPoliciesFetched: totalPolicies,
         summary,
         lobBreakdown,
-        lobTotal: Math.round(lobTotal * 100) / 100
+        lobTotal: Math.round(lobTotal * 100) / 100,
+        policies: {
+          new_business: nbMerged.slice(0, POLICY_DISPLAY_CAP),
+          renewal_rewrite: rwMerged.slice(0, POLICY_DISPLAY_CAP)
+        },
+        policiesTotal,
+        ...(policiesTruncated ? { policiesTruncated: true } : {})
       };
     }
 
@@ -1445,6 +1587,10 @@
     const producer = document.getElementById('cmp-producer').value || 'Jupiter Coverage';
     const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      alert('PDF export is temporarily unavailable.');
+      return;
+    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'letter' });
     const pageWidth = doc.internal.pageSize.getWidth();
