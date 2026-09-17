@@ -1,8 +1,10 @@
 <!-- jcc-ams-v9-live: Claude key banner + Chief month-range YTD -->
 <!DOCTYPE html>
-<!-- build:v5-no-vendor-scripts -->
+<!-- build:v8-full-donut-total -->
 <html lang="en">
 <head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
 <meta charset="UTF-8">
 <title>Jupiter Coverage — Agency Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -620,7 +622,7 @@
           <div class="lob-chart-wrap">
             <canvas id="lobChart"></canvas>
             <div class="lob-center-label">
-              <div class="big">$402K</div>
+              <div class="big" id="lobTotalPremium">$0</div>
               <div class="small">Total premium</div>
             </div>
           </div>
@@ -1102,9 +1104,12 @@
 
     const rangeEl = document.getElementById('lob-range');
     if (rangeEl) rangeEl.innerHTML = `By written premium &middot; ${data.range}`;
-    const big = document.querySelector('.lob-center-label .big');
+    const big = document.getElementById('lobTotalPremium') ||
+      document.querySelector('.lob-center-label .big');
     if (big) {
-      big.textContent = formatPremium(total);
+      // Full dollars only on the donut total — never abbreviate with K.
+      const n = Math.round(Number(total) || 0);
+      big.textContent = '$' + n.toLocaleString('en-US');
     }
 
     // Pure CSS donut — no Chart.js (CDN/vendor failures were blocking live status)
