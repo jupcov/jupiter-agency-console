@@ -1,13 +1,14 @@
 <!-- jcc-ams-v9-live: Claude key banner + Chief month-range YTD -->
 <!DOCTYPE html>
+<!-- build:v3-chart-local -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Jupiter Coverage — Agency Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="vendor/chart.umd.min.js"></script>
-<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/chart.umd.min.js?v=3"></script>
+<script src="vendor/jspdf.umd.min.js?v=3"></script>
 <style>
   :root {
     --navy: #3B3FCF;
@@ -1351,12 +1352,18 @@
       })();
     } catch (err) {
       console.error('loadLiveData failed', err);
+      const msg = (err && err.message) ? err.message : String(err);
       if (statusEl) {
-        statusEl.textContent = 'Live data unavailable: ' + (err && err.message ? err.message : String(err));
-        statusEl.style.color = 'var(--amber)';
+        // Chart/CDN issues should not look like a bad dashboard key
+        if (/Chart is not defined/i.test(msg)) {
+          statusEl.textContent = 'Live data loaded (chart library delayed — refresh if ring is blank)';
+          statusEl.style.color = 'var(--amber)';
+        } else {
+          statusEl.textContent = 'Live data unavailable: ' + msg;
+          statusEl.style.color = 'var(--amber)';
+        }
       }
-      // Still render placeholder LOB so UI isn't blank
-      renderLob('mtd');
+      try { renderLob('mtd'); } catch (e2) { console.warn(e2); }
     }
   }
 
