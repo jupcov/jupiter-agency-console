@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JCC Live MTD Test</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 16px;color:#1a1a2e}
+  input{width:100%;padding:12px;font-size:16px;margin:8px 0 12px;border:1px solid #ccc;border-radius:8px}
+  button{width:100%;padding:14px;font-size:16px;border:0;border-radius:8px;background:#3B3FCF;color:#fff;font-weight:700}
+  .card{background:#f6f7fb;border-radius:12px;padding:16px;margin-top:16px}
+  .big{font-size:28px;font-weight:800}
+  .err{color:#D64545;white-space:pre-wrap}
+  .ok{color:#1FAE37}
+  .muted{color:#656B7A;font-size:13px}
+</style>
+</head>
+<body>
+<h1>Live MTD test</h1>
+<p class="muted">Paste dashboard key, tap Load. No charts.</p>
+<input id="key" type="password" autocomplete="off" placeholder="Dashboard key">
+<button type="button" id="go">Load</button>
+<pre id="status" class="muted">Waiting…</pre>
+<div class="card">
+  <div class="muted">New Business</div>
+  <div class="big" id="nb">—</div>
+  <div class="muted" id="nbCount"></div>
+</div>
+<div class="card">
+  <div class="muted">Renewals / Rewrites</div>
+  <div class="big" id="rw">—</div>
+  <div class="muted" id="rwCount"></div>
+</div>
+<div class="card">
+  <div class="muted">Window</div>
+  <div id="win">—</div>
+</div>
+<script>
+(function () {
+  const URL = 'https://xkspweszwovzoxfqfcyc.supabase.co/functions/v1/hyper-function?period=mtd';
+  const status = document.getElementById('status');
+  const keyInput = document.getElementById('key');
+  const saved = localStorage.getItem('jcc_dashboard_key') || '';
+  if (saved) keyInput.placeholder = 'Key saved — tap Load or paste a new one';
+
+  function money(n) {
+    return '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
+  }
+
+  async function load() {
+    const key = (keyInput.value || localStorage.getItem('jcc_dashboard_key') || '').trim();
+    if (!key) {
+      status.className = 'err';
+      status.textContent = 'Paste the dashboard key first.';
+      return;
+    }
+    status.className = 'muted';
+    status.textContent = 'Loading…';
+    try {
+      const res = await fetch(URL, {
+        headers: { 'x-dashboard-key': key, 'Accept': 'application/json' }
+      });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch (e) {
+        throw new Error('Non-JSON HTTP ' + res.status + ': ' + text.slice(0, 200));
+      }
+      if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
+      localStorage.setItem('jcc_dashboard_key', key);
+      keyInput.value = '';
+      const m = data.mtd || {};
+      const s = m.summary || {};
+      const nb = s.new_business || {};
+      const rw = s.renewal_rewrite || {};
+      document.getElementById('nb').textContent = money(nb.premium);
+      document.getElementById('nbCount').textContent = (nb.count ?? 0) + ' policies';
+      document.getElementById('rw').textContent = money(rw.premium);
+      document.getElementById('rwCount').textContent = (rw.count ?? 0) + ' policies';
+      document.getElementById('win').textContent = (m.start || '?') + ' → ' + (m.end || '?');
+      status.className = 'ok';
+      status.textContent = 'OK · ' + (data.generatedAt || '') + ' · ' + (data.elapsedMs || '') + 'ms';
+    } catch (err) {
+      status.className = 'err';
+      status.textContent = String(err && err.message ? err.message : err);
+    }
+  }
+
+  document.getElementById('go').addEventListener('click', load);
+  if (location.search.indexOf('reset') >= 0) {
+    localStorage.removeItem('jcc_dashboard_key');
+    keyInput.placeholder = 'Paste dashboard key';
+  }
+})();
+</script>
+</body>
+</html>
