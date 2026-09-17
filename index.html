@@ -361,7 +361,7 @@
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     text-align: center; pointer-events: none;
   }
-  .lob-center-label .big { font-size: 20px; font-weight: 700; color: var(--navy-deep); }
+  .lob-center-label .big { font-size: 15px; font-weight: 700; color: var(--navy-deep); letter-spacing: -0.02em; line-height: 1.15; }
   .lob-center-label .small { font-size: 10.5px; color: var(--slate); margin-top: 1px; }
   .lob-legend { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
   .lob-legend-item { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
@@ -1104,7 +1104,7 @@
     if (rangeEl) rangeEl.innerHTML = `By written premium &middot; ${data.range}`;
     const big = document.querySelector('.lob-center-label .big');
     if (big) {
-      big.textContent = total >= 1000 ? `$${(total / 1000).toFixed(0)}K` : `$${Math.round(total)}`;
+      big.textContent = formatPremium(total);
     }
 
     // Pure CSS donut — no Chart.js (CDN/vendor failures were blocking live status)
@@ -1147,7 +1147,7 @@
           <div class="lob-swatch" style="background:${d.color};"></div>
           <div class="lob-legend-text">
             <span class="lob-legend-name">${d.name}</span>
-            <span class="lob-legend-detail">$${(prem / 1000).toFixed(1)}K</span>
+            <span class="lob-legend-detail">${formatPremium(prem)}</span>
           </div>
           <div class="lob-legend-pct">${pct}%</div>
         </div>
