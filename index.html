@@ -465,6 +465,7 @@
   <span class="banner-label">Dashboard key</span>
   <input id="key-input" type="password" autocomplete="off" placeholder="Paste x-dashboard-key" />
   <button type="button" class="btn-load-key" onclick="saveKeyFromBanner()">Load Dashboard</button>
+  <button type="button" class="btn-load-key" style="background:#656B7A" onclick="resetDashboardKey()">Change key</button>
   <span class="banner-hint">Stored in this browser only (localStorage).</span>
 </div>
 
@@ -856,11 +857,35 @@
     };
   }
 
+  function showKeyBanner(clearInput) {
+    const banner = document.getElementById('key-banner');
+    const input = document.getElementById('key-input');
+    if (banner) banner.classList.add('visible');
+    if (clearInput && input) input.value = '';
+    if (input) input.focus();
+  }
+
+  function resetDashboardKey() {
+    localStorage.removeItem('jcc_dashboard_key');
+    showKeyBanner(true);
+  }
+
   function promptForKeyIfMissing() {
     const banner = document.getElementById('key-banner');
     const { key } = getConfig();
+    // ?reset=1 or ?resetKey=1 clears saved key so you can paste again
+    const params = new URLSearchParams(location.search);
+    if (params.has('reset') || params.has('resetKey')) {
+      localStorage.removeItem('jcc_dashboard_key');
+      params.delete('reset');
+      params.delete('resetKey');
+      const qs = params.toString();
+      history.replaceState({}, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      showKeyBanner(true);
+      return false;
+    }
     if (!key) {
-      if (banner) banner.classList.add('visible');
+      showKeyBanner(false);
       return false;
     }
     if (banner) banner.classList.remove('visible');
@@ -888,6 +913,8 @@
     if (banner) banner.classList.remove('visible');
     loadLiveData();
   };
+
+  window.resetDashboardKey = resetDashboardKey;
 
   const periodData = {
     nb: {
